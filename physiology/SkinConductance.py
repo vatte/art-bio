@@ -1,3 +1,9 @@
+'''
+    Electrodermal response detection based on zero crossing
+
+    Valtteri Wikstrom
+'''
+
 from numpy import mean
 from .DataCollector import DataCollector
 import time
