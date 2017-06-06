@@ -1,5 +1,5 @@
 from numpy import mean
-from .DataCollector import DataCollector
+from DataCollector import DataCollector
 
 class HeartRate(DataCollector):
 	
