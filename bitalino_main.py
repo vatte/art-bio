@@ -6,8 +6,10 @@
 
 import glob
 import sys
+import platform
 
 from bitalino import BITalino # pip install bitalino
+from bitalino import find as bitalinoFind
 
 from physiology import HeartRate, SkinConductance
 
@@ -16,14 +18,26 @@ try:
 except IndexError:
     dev_i = 0
 
-#this is meant for OS X only
-devices = glob.glob('/dev/tty.BITalino*')
+if platform.system() == 'Windows' or platform.system() == 'Linux':
+    try:
+        bitalinosMacAddress = None
+        for mac in bitalinoFind():
+            if 'BITalino' in mac[1]:
+                print(mac[1])
+                bitalinosMacAddress = mac[0]
+        print("opening port " + bitalinosMacAddress)
+        device_address = bitalinosMacAddress
+    except IndexError:
+        raise Exception('No BITalino found with index ' + str(dev_i))
+else:
+    #this is meant for OS X only
+    devices = glob.glob('/dev/tty.BITalino*')
 
-try:
-    print("opening port " + devices[dev_i])
-    device_address = devices[dev_i]
-except IndexError:
-    raise Exception('No BITalino found with index ' + str(dev_i))
+    try:
+        print("opening port " + devices[dev_i])
+        device_address = devices[dev_i]
+    except IndexError:
+        raise Exception('No BITalino found with index ' + str(dev_i))
 
 chans = [1, 2] # ECG = 1, EDA = 2
 fs = 100 # sampling rate
