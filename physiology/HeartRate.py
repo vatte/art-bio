@@ -5,13 +5,13 @@
     Valtteri Wikstrom
 '''
 
-from numpy import mean
 from .DataCollector import DataCollector
 
 class HeartRate(DataCollector):
     
     def __init__(self, _Fs, _filter_r):
-        DataCollector.__init__(self, _Fs, _filter_r)
+        DataCollector.__init__(self, _Fs)
+        self.filter_r = _filter_r
         self.clead = []
         self.filtered_clead = []
         self.emg_filter_r = int(0.5*_Fs/34)
@@ -51,12 +51,13 @@ class HeartRate(DataCollector):
         #complex lead amplified noise filtering
         self.moving_average('clead', 'filtered_clead', self.clead_filter_r)
         
+        ibis = []
         if not self.initialized and len(self.filtered_clead) > self.init_time * self.Fs:
             self.init_beats()
-            return self.detect_beats(0)
+            ibis = self.detect_beats(0)
         elif self.initialized:
-            return self.detect_beats(last_clead_i)
-        return []
+            ibis = self.detect_beats(last_clead_i)
+        return {'ibi': ibis}
         
         
     def init_beats(self):
@@ -69,7 +70,7 @@ class HeartRate(DataCollector):
         self.m_d = (self.m*0.4)/self.Fs
         
         #initialise f 
-        self.f = mean(self.filtered_clead[0:self.f_interval])
+        self.f = self.mean(self.filtered_clead[0:self.f_interval])
         
     def detect_beats(self, last_i):
         new_beats = []
@@ -95,7 +96,7 @@ class HeartRate(DataCollector):
                     else:
                         self.M[self.m_i] = new_M
                         
-                    self.m = mean(self.M)
+                    self.m = self.mean(self.M)
                     
                     self.m_d = 0.4 * self.m / self.Fs
                 
@@ -110,7 +111,7 @@ class HeartRate(DataCollector):
                     else:
                         self.RR[self.r_i] = i-self.last
                         self.r_i = (self.r_i + 1) % 5
-                    self.rr = mean(self.RR)
+                    self.rr = self.mean(self.RR)
     
                     self.beats.append(i)
                     new_beats.append((i - self.last) / float(self.Fs))
