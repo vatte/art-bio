@@ -1,4 +1,4 @@
 .DS_Store
 *.pyc
-build/
 __pycache__/
+build/
