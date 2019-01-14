@@ -13,7 +13,7 @@ readme = '''
         reda (same as above + /eda/raw)
 
         example usage:
-            art-bio -c ecg osc 127.0.0.1:7880 -c eeg file eeg.txt
+            art-bio -c ecg osc -c reeg file
 
     command line arguments:
     -d, --device [device_type (default: bitalino)]
