@@ -1,4 +1,5 @@
  🐍 art-bio : A Real-Time BIOsignal feature extraction tool 🦆 
+
     https://github.com/vatte/rt-bio
 
     sources:
@@ -35,4 +36,4 @@
     --filename [filename]
         [filename (default: temp.txt)]
         
- ### LICENSE : GNU General Public License v3.0
+ - LICENSE : GNU General Public License v3.0
