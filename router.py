@@ -1,4 +1,5 @@
 import time
+from threading import Thread
 
 from pythonosc import osc_message_builder
 from pythonosc import udp_client
@@ -10,6 +11,7 @@ class Router():
         self.osc_prefix = None
         self.osc_address = None
         self.filename = None
+        self.digital_out_func = None
 
     def init_destinations(self, connections):
 
@@ -53,3 +55,8 @@ class Router():
                             self.osc_client.send_message(self.osc_prefix + osc_dest, data)
                         elif destination == 'file':
                             self.file_handle.write('{} {}: {}\n'.format(current_time, osc_dest, str(data)))
+                        elif destination == 'digital':
+                            if self.digital_out_func:
+                                self.digital_out_func()
+
+

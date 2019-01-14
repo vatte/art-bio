@@ -3,6 +3,8 @@
 import glob
 import sys
 import platform
+import time
+from threading import Thread
 
 import bitalino # windows and linux need pybluez to be installed
                 # pip install bitalino
@@ -24,6 +26,7 @@ class Bitalino(Device):
             'acc': 4,
             'lux': 5
         }
+        self.digital_triggers = [1, 1]
 
         # find device
         self.device_list = self.list_devices()
@@ -86,4 +89,16 @@ class Bitalino(Device):
             self.stop()        
         # Close connection
         self.device.close()
+    
+    #toggle bitalino digital outputs, format [int, int]
+    def digital_trigger(self):
+        print('triggering digital')
+        def myfunc(i):
+            self.device.trigger(self.digital_triggers)
+            time.sleep(0.1)
+            self.device.trigger([0, 0])
+
+        for i in range(10):
+            t = Thread(target=myfunc, args=(i,))
+            t.start()
 
