@@ -112,7 +112,6 @@ router.init_destinations(connections)
 #initialize device
 if device_name == 'bitalino':
     device = Bitalino(device_index)
-    router.digital_out_func = device.digital_trigger
     pass
 else:
     raise ValueError('No such device: ' + device_name)
