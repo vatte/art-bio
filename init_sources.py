@@ -1,6 +1,6 @@
 from physiology import HeartRate, SkinConductance, Oscillations, DataCollector, MusclePower
 
-import parser
+import argparser as parser
 
 # initialize sources for feature extraction
 def init_sources(connections, fs):
@@ -9,7 +9,7 @@ def init_sources(connections, fs):
     for source in connections.keys():
         if source[0] == 'r' and source[1:] in parser.source_types:
             source = source[1:]
-        if not source in sources:
+        if source in parser.source_types and not source in sources:
             if source == 'ecg':
                 sources[source] = HeartRate(fs, 32)
             elif source == 'eda':
@@ -25,7 +25,6 @@ def init_sources(connections, fs):
                         'delta': [3.0, 4.0],
                     }
                 )
-
             else:
-                sources[source] = DataCollector(fs)    
+                sources[source] = DataCollector(fs)
     return sources
