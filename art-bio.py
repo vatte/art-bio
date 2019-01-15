@@ -75,7 +75,7 @@ if '-l' in args or '--list' in args:
     else:
         raise ValueError('No such device: ' + device_name)
     print('exiting...')
-    exit()
+    sys.exit(0)
 
 #get osc_address from args
 osc_address_arg = parser.getOSCAddress(args)
@@ -104,7 +104,7 @@ connections = parser.getConnections(args)
 #if no connections set show help
 if not len(connections):
     print(readme)
-    exit()
+    sys.exit(0)
 
 sources = init_sources(connections, sampling_frequency)
 router.init_destinations(connections)
