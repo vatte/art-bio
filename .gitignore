@@ -1,4 +1,5 @@
 _pycache_/
 build/
+.DS_Store
 temp.txt
 *.pyc
