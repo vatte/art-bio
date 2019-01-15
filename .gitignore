@@ -1,0 +1,5 @@
+_pycache_/
+build/
+temp.txt
+.DS_Store
+*.pyc
