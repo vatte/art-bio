@@ -1,0 +1,5 @@
+('c:\\users\\humex\\appdata\\local\\programs\\python\\python37\\lib\\site-packages\\pybluez-0.22-py3.7-win-amd64.egg',
+ None,
+ {'*.pyw', '*.pyd', '*.pyc', 'EGG-INFO', '*.cp37-win_amd64.pyd', '*.py'},
+ 'DATA',
+ [])

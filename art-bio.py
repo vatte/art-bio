@@ -39,7 +39,7 @@ readme = '''
 
 import sys
 
-import parser
+import argparser as parser
 from devices import *
 from init_sources import init_sources
 from router import Router
