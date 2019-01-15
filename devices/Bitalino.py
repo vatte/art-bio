@@ -98,7 +98,7 @@ class Bitalino(Device):
             time.sleep(0.1)
             self.device.trigger([0, 0])
 
-        for i in range(10):
-            t = Thread(target=myfunc, args=(i,))
-            t.start()
+        
+        t = Thread(target=myfunc, args=(i,))
+        t.start()
 
