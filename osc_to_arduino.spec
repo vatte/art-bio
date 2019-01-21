@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['osc_to_arduino.py'],
-             pathex=['/Users/djwikstr/Documents/art-bio'],
+             pathex=['C:\\Users\\Humex\\Documents\\art-bio'],
              binaries=[],
              datas=[],
              hiddenimports=[],
