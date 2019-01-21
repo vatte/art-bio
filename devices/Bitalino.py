@@ -26,7 +26,7 @@ class Bitalino(Device):
             'acc': 4,
             'lux': 5
         }
-        self.digital_triggers = [1, 0]
+        self.digital_triggers = [1, 1]
 
         # find device
         self.device_list = self.list_devices()
