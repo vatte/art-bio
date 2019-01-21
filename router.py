@@ -1,17 +1,23 @@
 import time
+import websockets
 from threading import Thread
 
 from pythonosc import osc_message_builder
 from pythonosc import udp_client
+from wsserver import WSServer
+
 
 class Router():
     def __init__(self):
         self.osc_client = None
+        self.ws_server = None
         self.file_handle = None
         self.osc_prefix = None
         self.osc_address = None
         self.filename = None
-        self.digital_out_func = None
+        def digital_out():
+            pass
+        self.digital_out_func = digital_out
 
     def init_destinations(self, connections):
 
@@ -25,7 +31,9 @@ class Router():
             self.osc_client = udp_client.SimpleUDPClient(address_port[0], int(address_port[1]))
         if 'file' in destinations:
             self.file_handle = open(self.filename, 'w')
-            print("initializing file " + self.filename)        
+            print("initializing file " + self.filename)
+        if 'ws' in destinations:
+            self.ws_server = WSServer()
 
 
     def route_data(self, source, connections, features, raw_data):
@@ -44,6 +52,9 @@ class Router():
                     self.osc_client.send_message(self.osc_prefix + osc_dest, raw_data)
                 elif destination == 'file':
                     self.file_handle.write('{} {}: {}\n'.format(current_time, osc_dest, str(raw_data)))
+                elif destination == 'ws':
+                    self.ws_server.add_message('{}|{}/{}'.format(current_time, osc_dest, str(raw_data)))
+
 
         # features
         if features:
@@ -55,6 +66,8 @@ class Router():
                             self.osc_client.send_message(self.osc_prefix + osc_dest, data)
                         elif destination == 'file':
                             self.file_handle.write('{} {}: {}\n'.format(current_time, osc_dest, str(data)))
+                        elif destination == 'ws':
+                            self.ws_server.add_message('{}|{}/{}'.format(current_time, osc_dest, str(raw_data)))
                         elif destination == 'digital':
                             if self.digital_out_func:
                                 self.digital_out_func()

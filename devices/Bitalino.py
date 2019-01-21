@@ -26,7 +26,7 @@ class Bitalino(Device):
             'acc': 4,
             'lux': 5
         }
-        self.digital_triggers = [1, 1]
+        self.digital_triggers = [1, 0]
 
         # find device
         self.device_list = self.list_devices()
@@ -93,12 +93,12 @@ class Bitalino(Device):
     #toggle bitalino digital outputs, format [int, int]
     def digital_trigger(self):
         print('triggering digital')
-        def myfunc(i):
+        def myfunc():
             self.device.trigger(self.digital_triggers)
             time.sleep(0.1)
             self.device.trigger([0, 0])
 
         
-        t = Thread(target=myfunc, args=(i,))
+        t = Thread(target=myfunc)
         t.start()
 

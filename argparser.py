@@ -47,7 +47,7 @@ def getFilename(args):
 
 
 source_types = ['ecg', 'eda', 'eeg', 'emg']
-destination_types = ['osc', 'file', 'digital']
+destination_types = ['osc', 'file', 'digital', 'ws']
 
 def getConnections(args):
 

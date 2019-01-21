@@ -11,7 +11,7 @@ def init_sources(connections, fs):
             source = source[1:]
         if source in parser.source_types and not source in sources:
             if source == 'ecg':
-                sources[source] = HeartRate(fs, 32)
+                sources[source] = HeartRate(fs, 20)
             elif source == 'eda':
                 sources[source] = SkinConductance(fs, 20, 0.4, 20)
             elif source == 'emg':
