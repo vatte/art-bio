@@ -1,0 +1,7 @@
+[
+  "tests/test_DataCollector.py::test_DataCollector",
+  "tests/test_HeartRate.py::test_HeartRate",
+  "tests/test_MusclePower.py::test_MusclePower",
+  "tests/test_Oscillations.py::test_Oscillations",
+  "tests/test_SkinConductance.py::test_SkinConductance"
+]

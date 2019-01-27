@@ -65,6 +65,11 @@ device_name_arg = parser.getDeviceName(args)
 if device_name_arg:
     device_name = device_name_arg
 
+#get device index from args
+device_index_arg = parser.getDeviceIndex(args)
+if device_index_arg:
+    device_index = device_index_arg
+
 #list devices and exit if --list
 if '-l' in args or '--list' in args:
     print('list of ' + device_name + ' devices: ')
@@ -82,7 +87,7 @@ osc_address_arg = parser.getOSCAddress(args)
 if osc_address_arg:
     router.osc_address = osc_address_arg
 
-#get osc_address from args
+#get osc_prefix from args
 osc_prefix_arg = parser.getOSCPrefix(args)
 if osc_prefix_arg:
     router.osc_prefix = osc_prefix_arg

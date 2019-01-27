@@ -8,6 +8,15 @@ def getDeviceName(args):
             raise ValueError('device name empty')
     return None
 
+def getDeviceIndex(args):
+    if '-i' in args or '--index' in args:
+        index = next(i for i, arg in enumerate(args) if arg == '-i' or arg == '--index')
+        try:
+            return int(args[index+1])
+        except IndexError:
+            raise ValueError('device name empty')
+    return None
+
 def getOSCAddress(args):
     if '--osc-address' in args:
         index = next(i for i, arg in enumerate(args) if arg == '--osc-address')
@@ -30,7 +39,7 @@ def getSamplingFrequency(args):
     if '--sampling-frequency' in args or '-f' in args:
         index = next(i for i, arg in enumerate(args) if arg == '--sampling-frequency' or arg == '-f')
         try:
-            return args[index+1]
+            return int(args[index+1])
         except IndexError:
             raise ValueError('sampling frequency is empty')
     return None

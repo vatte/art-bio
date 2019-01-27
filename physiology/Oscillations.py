@@ -29,26 +29,23 @@ class Oscillations:
             result = [[] for i in range(6)]
             freqpower = {}
             for f in self.freqs:
-                freqpower[f] = np.zeros((len(samples), 1), dtype=np.float32)
+                freqpower[f] = [0 for _ in range(len(samples))]
             raw_electrodes = [[] for _ in range(len(self.spectdata))]
             for i, electrode_data in enumerate(self.spectdata):
                 windowed = electrode_data * self.hanning
                 padded = np.append(windowed, self.pad)
-                spectrum = np.fft.fft(padded) #/ self.fft_size
+                spectrum = np.fft.fft(padded)
                 autopower = abs(spectrum * np.conj(spectrum)) 
                 result[i] = autopower[:self.fft_size]
                 
                 powerspect = 10.0 * np.log10(np.power(abs(spectrum),2))
-                #powerspect = 10.0 * np.log10(np.abs(spectrum)**2)
                 freqC = np.fft.fftfreq(len(padded), 1.0/self.sample_rate)
                 
                 for f in self.freqs:
                     freq = self.freqs[f]
-                    start = np.where(freqC==freq[0])
-                    start = start[0][0]
-                    stop = np.where(freqC==freq[1])
-                    stop = stop[0][0]
-                    freqpower[f][i] = sum(powerspect[start:stop])                      
+                    start = np.where((freqC <= freq[0]) & (freqC >= 0))[0][-1]
+                    stop = np.where((freqC >= freq[1]) & (freqC >= 0))[0][-1]
+                    freqpower[f][i] = sum(powerspect[start:stop])            
                 
                 self.idx = int(self.fft_size * self.overlap)
                 raw_electrodes[i] = [float(electrode_data[a]) for a in range(self.idx, len(electrode_data))]

@@ -43,7 +43,7 @@ class SkinConductance(DataCollector):
                     response_l = i - self.responses[-1][0]
                     if response_l > self.min_length:
                         self.responses[-1][0] = response_l
-                        self.responses[-1].append(self.filtered_data[i] - self.filtered_data[self.responses[-1][0]])
+                        self.responses[-1].append(self.filtered_data[i] - self.filtered_data[i-response_l])
                         self.responses.append([])
                     else:
                         self.responses[-1] = []

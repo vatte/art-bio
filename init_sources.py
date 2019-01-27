@@ -13,7 +13,7 @@ def init_sources(connections, fs):
             if source == 'ecg':
                 sources[source] = HeartRate(fs, 20)
             elif source == 'eda':
-                sources[source] = SkinConductance(fs, 20, 0.4, 20)
+                sources[source] = SkinConductance(fs, 200, 0.05, 30)
             elif source == 'emg':
                 sources[source] = MusclePower(fs)
             elif source == 'eeg':
