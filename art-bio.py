@@ -77,6 +77,10 @@ if '-l' in args or '--list' in args:
         device_list = Bitalino.list_devices(None)
         for i, dev in enumerate(device_list):
             print('[{}] {}'.format(i, dev))
+    if(device_name == 'openbci'):
+        device_list = OpenBCI.list_devices(None)
+        for i, dev in enumerate(device_list):
+            print('[{}] {}'.format(i, dev))
     else:
         raise ValueError('No such device: ' + device_name)
     print('exiting...')
@@ -118,7 +122,11 @@ router.init_destinations(connections)
 if device_name == 'bitalino':
     device = Bitalino(device_index)
     router.digital_out_func = device.digital_trigger
-    pass
+elif device_name == 'openbci':
+    device = OpenBCI(device_index)
+    def noDigital():
+        raise ValueError('openbci has no digital output defined')
+    router.digital_out_func = noDigital
 else:
     raise ValueError('No such device: ' + device_name)
 

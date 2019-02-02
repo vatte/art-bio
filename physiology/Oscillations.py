@@ -14,11 +14,12 @@ class Oscillations:
 
     def add_data(self, samples):
         freqs = None
-        for i in range(len(samples[0])):
-            out = []
-            for c in samples:
-                out.append(c[i])
-            freqs = self.add_samples(out)
+        for i in range(len(samples)):
+            #out = []
+            #for c in samples:
+            #    out.append(c[i])
+            #freqs = self.add_samples(out)
+            freqs = self.add_samples(samples[i])
         return freqs
     
     def add_samples(self, samples):
@@ -26,7 +27,7 @@ class Oscillations:
             self.spectdata[i][self.idx] = sample
         self.idx += 1
         if self.idx >= self.fft_size:
-            result = [[] for i in range(6)]
+            result = [[] for i in range(self.num_chans)]
             freqpower = {}
             for f in self.freqs:
                 freqpower[f] = [0 for _ in range(len(samples))]

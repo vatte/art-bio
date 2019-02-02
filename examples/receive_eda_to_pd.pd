@@ -1,7 +1,7 @@
-#N canvas 0 23 450 300 10;
-#X obj 61 72 mrpeach/udpreceive 4810;
-#X obj 61 97 mrpeach/unpackOSC;
-#X floatatom 61 146 5 0 0 0 - - -;
+#N canvas 363 113 450 300 10;
+#X obj 40 80 mrpeach/udpreceive 4810;
+#X obj 40 105 mrpeach/unpackOSC;
+#X floatatom 40 154 5 0 0 0 - - -;
 #N canvas 0 23 450 300 smooth-more 0;
 #X obj 301 138 f;
 #X obj 252 222 +;
@@ -18,10 +18,11 @@
 #X connect 3 0 2 0;
 #X connect 5 0 1 1;
 #X connect 6 0 1 0;
-#X restore 61 169 pd smooth-more;
-#X floatatom 61 192 5 0 0 0 - - -;
-#X obj 61 122 route /rtbio/eda/raw /rtbio/eda/edr;
-#X obj 164 147 print EDR:;
+#X restore 40 177 pd smooth-more;
+#X floatatom 40 200 5 0 0 0 - - -;
+#X obj 40 130 route /rtbio/eda/raw /rtbio/eda/edr;
+#X obj 143 155 print EDR:;
+#X text 35 26 COMMAND: art-bio -c reda osc;
 #X connect 0 0 1 0;
 #X connect 1 0 5 0;
 #X connect 2 0 3 0;

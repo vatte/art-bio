@@ -17,7 +17,10 @@ def init_sources(connections, fs):
             elif source == 'emg':
                 sources[source] = MusclePower(fs)
             elif source == 'eeg':
-                sources[source] = Oscillations(fs, 1, 500, 0.75, 
+                #have to get eeg chan numbers from somewhere
+                num_chans = 1 if fs == 100 else 8
+                print('number of chans {}'.format(num_chans))
+                sources[source] = Oscillations(fs, num_chans, 500, 0.75, 
                     {
                         'theta': [4.0, 8.0],
                         'alpha': [8.0, 13.0],

@@ -1,0 +1,15 @@
+#N canvas 400 90 540 405 10;
+#X obj 37 48 mrpeach/unpackOSC;
+#X floatatom 45 134 10 0 0 0 - - -;
+#X obj 37 73 route /rtbio/eeg/alpha /rtbio/eeg/beta /rtbio/eeg/gamma
+/rtbio/eeg/delta;
+#X floatatom 125 132 10 0 0 0 - - -;
+#X floatatom 227 164 10 0 0 0 - - -;
+#X floatatom 291 132 10 0 0 0 - - -;
+#X obj 37 23 mrpeach/udpreceive 4810;
+#X connect 0 0 2 0;
+#X connect 2 0 1 0;
+#X connect 2 1 3 0;
+#X connect 2 2 4 0;
+#X connect 2 3 5 0;
+#X connect 6 0 0 0;
