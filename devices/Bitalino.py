@@ -74,7 +74,7 @@ class Bitalino(Device):
         for i, c in enumerate(self.channels):
             samples[c] = in_samples[:, -len(self.channels) + i].tolist()
             if c == 'eeg': #eeg supports multiple electrodes
-                samples[c] = [samples[c]]
+                samples[c] = [ [ s ] for s in samples[c] ]
         return samples
 
     #stop streaming

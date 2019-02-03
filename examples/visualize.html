@@ -45,12 +45,14 @@
                     var time_data = event.data.split('|');
                     var time = time_data[0] * 1000;
                     var data = time_data[1].split('/');
+                    console.log(data[3]);
                     if(data[2] == 'raw') {
                         ts_index = channels[data[1]];
                         if(ts_index !== undefined) {
                             var samples = data[3].replace('[', '').replace(']', '').replace('[', '').replace(']', '').split(', ');
+                            console.log(samples);
                             for(var i=0; i<samples.length; i++) {
-                                var sample = samples[i];
+                                var sample = samples[i].replace('[', '').replace(']', '');
                                 if(data[1] == 'eda') {
                                     sample = prev_eda !== undefined ? 0.995 * prev_eda + 0.005 * sample : sample;
                                     prev_eda = sample;

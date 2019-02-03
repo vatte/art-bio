@@ -7,6 +7,7 @@
 
 import glob
 import serial
+import serial.tools.list_ports
 import struct
 import time
 import sys
@@ -32,10 +33,23 @@ class OpenBCI():
 
         print("Serial established...")
     
+
+
+    
     #find all devices
     #return as array of device id strings
     def list_devices(self):
-        return glob.glob('/dev/tty.usb*')
+        
+        def serial_ports():
+            """ Lists serial port names
+
+                :raises EnvironmentError:
+                    On unsupported or unknown platforms
+                :returns:
+                    A list of the serial ports available on the system
+            """
+        return [comport.device for comport in serial.tools.list_ports.comports()]
+        #return glob.glob('/dev/tty.usb*')
     
     #start streaming
     def start(self, fs, channels):

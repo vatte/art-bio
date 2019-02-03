@@ -20,12 +20,12 @@ def init_sources(connections, fs):
                 #have to get eeg chan numbers from somewhere
                 num_chans = 1 if fs == 100 else 8
                 print('number of chans {}'.format(num_chans))
-                sources[source] = Oscillations(fs, num_chans, 500, 0.75, 
+                sources[source] = Oscillations(fs, num_chans, 256, 0.8, 
                     {
                         'theta': [4.0, 8.0],
                         'alpha': [8.0, 13.0],
                         'beta': [13.0, 30.0],
-                        'delta': [3.0, 4.0],
+                        'delta': [1.0, 4.0],
                     }
                 )
             else:

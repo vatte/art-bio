@@ -19,7 +19,8 @@ class Oscillations:
             #for c in samples:
             #    out.append(c[i])
             #freqs = self.add_samples(out)
-            freqs = self.add_samples(samples[i])
+            freqs_in = self.add_samples(samples[i])
+            freqs = freqs_in if freqs_in != None else freqs
         return freqs
     
     def add_samples(self, samples):
@@ -45,8 +46,8 @@ class Oscillations:
                 for f in self.freqs:
                     freq = self.freqs[f]
                     start = np.where((freqC <= freq[0]) & (freqC >= 0))[0][-1]
-                    stop = np.where((freqC >= freq[1]) & (freqC >= 0))[0][-1]
-                    freqpower[f][i] = sum(powerspect[start:stop])            
+                    stop = np.where((freqC >= freq[1]) & (freqC >= 0))[0][0]
+                    freqpower[f][i] = np.mean(powerspect[start:stop]) + np.mean(powerspect[-stop-1:-start-1])
                 
                 self.idx = int(self.fft_size * self.overlap)
                 raw_electrodes[i] = [float(electrode_data[a]) for a in range(self.idx, len(electrode_data))]

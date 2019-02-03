@@ -49,7 +49,8 @@ class Router():
             for destination in connections['r' + source]: 
                 osc_dest = '/{}/raw'.format(source)
                 if destination == 'osc':
-                    self.osc_client.send_message(self.osc_prefix + osc_dest, raw_data)
+                    for data in raw_data:
+                        self.osc_client.send_message(self.osc_prefix + osc_dest, data)
                 elif destination == 'file':
                     self.file_handle.write('{} {}: {}\n'.format(current_time, osc_dest, str(raw_data)))
                 elif destination == 'ws':
@@ -61,15 +62,16 @@ class Router():
             for destination in source_connections:
                 for feature in features.keys():
                     osc_dest = '/{}/{}'.format(source, feature)
-                    for data in features[feature]:
-                        if destination == 'osc':
-                            self.osc_client.send_message(self.osc_prefix + osc_dest, data)
-                        elif destination == 'file':
-                            self.file_handle.write('{} {}: {}\n'.format(current_time, osc_dest, str(data)))
-                        elif destination == 'ws':
-                            self.ws_server.add_message('{}|{}/{}'.format(current_time, osc_dest, str(raw_data)))
-                        elif destination == 'digital':
-                            if self.digital_out_func:
-                                self.digital_out_func()
+                    #for data in features[feature]:
+                    data = features[feature]
+                    if destination == 'osc':
+                        self.osc_client.send_message(self.osc_prefix + osc_dest, data)
+                    elif destination == 'file':
+                        self.file_handle.write('{} {}: {}\n'.format(current_time, osc_dest, str(data)))
+                    elif destination == 'ws':
+                        self.ws_server.add_message('{}|{}/{}'.format(current_time, osc_dest, str(raw_data)))
+                    elif destination == 'digital':
+                        if self.digital_out_func:
+                            self.digital_out_func()
 
 
