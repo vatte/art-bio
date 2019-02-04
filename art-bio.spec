@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['art-bio.py'],
-             pathex=['C:\\Users\\Humex\\Documents\\art-bio'],
+             pathex=['/Users/djwikstr/Documents/art-bio'],
              binaries=[],
              datas=[],
              hiddenimports=[],
