@@ -20,7 +20,16 @@ class Oscillations:
             #    out.append(c[i])
             #freqs = self.add_samples(out)
             freqs_in = self.add_samples(samples[i])
-            freqs = freqs_in if freqs_in != None else freqs
+            #freqs = freqs_in if freqs_in != None else freqs
+            if freqs_in != None:
+                if freqs == None:
+                    freqs = {}
+                    for freq in freqs_in:
+                        freqs[freq] = [freqs_in[freq]]
+                else:
+                    for freq in freqs_in:
+                        freqs[freq].append(freqs_in[freq])
+
         return freqs
     
     def add_samples(self, samples):

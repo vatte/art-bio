@@ -50,6 +50,5 @@ class SkinConductance(DataCollector):
                     self.found = False
 
         l_resp2 = len(self.responses)-1
-
+        
         return {'edr': self.responses[l_resp:l_resp2]}
-
