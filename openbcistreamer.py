@@ -22,7 +22,7 @@ normalizer_index = 0
 def normalize_all(data, normalizer):
     normalized = {}
     for d in ['alpha', 'lateralization']:
-        d_data = [normalizer[i][d] for i in xrange(len(normalizer))]
+        d_data = [normalizer[i][d] for i in range(len(normalizer))]
         normalized[d] = normalize(data[d], d_data)
     return normalized
 

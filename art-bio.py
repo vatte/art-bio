@@ -38,6 +38,7 @@ readme = '''
 '''
 
 import sys
+import configparser
 
 import argparser as parser
 from devices import *
@@ -77,7 +78,7 @@ if '-l' in args or '--list' in args:
         device_list = Bitalino.list_devices(None)
         for i, dev in enumerate(device_list):
             print('[{}] {}'.format(i, dev))
-    if(device_name == 'openbci'):
+    elif(device_name == 'openbci'):
         device_list = OpenBCI.list_devices(None)
         for i, dev in enumerate(device_list):
             print('[{}] {}'.format(i, dev))
@@ -115,12 +116,18 @@ if not len(connections):
     print(readme)
     sys.exit(0)
 
-sources = init_sources(connections, sampling_frequency)
-router.init_destinations(connections)
+#read config file if it exists
+config = configparser.ConfigParser()
+config.read('config.ini')
 
 #initialize device
 if device_name == 'bitalino':
     device = Bitalino(device_index)
+    if 'bitalino' in config:
+        channels = {}
+        for k in config['bitalino']:
+            channels[k] = [ int(c) for c in config['bitalino'][k].split(',') ]
+        device.channel_map = channels
     router.digital_out_func = device.digital_trigger
 elif device_name == 'openbci':
     device = OpenBCI(device_index)
@@ -130,6 +137,11 @@ elif device_name == 'openbci':
 else:
     raise ValueError('No such device: ' + device_name)
 
+
+#initialize sources and destinations
+sources = init_sources(connections, device.channel_map, sampling_frequency)
+router.init_destinations(connections)
+
 #start streaming
 device.start(sampling_frequency, sources.keys())
 
@@ -138,7 +150,9 @@ try:
         # Read samples
         samples = device.read()
         for source in samples.keys():
-            features = sources[source].add_data(samples[source])
+            features = []
+            for i, channel in enumerate(samples[source]):
+                features.append(sources[source][i].add_data(channel))
             router.route_data(source, connections, features, samples[source])
 
 except KeyboardInterrupt:

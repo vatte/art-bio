@@ -17,14 +17,14 @@ class Bitalino(Device):
     def __init__(self, dev_i = 0):
         #start connection to device
 
-        #channel numbers for bitalino
+        #default channel numbers for bitalino
         self.channel_map = {
-            'emg': 0,
-            'ecg': 1,
-            'eda': 2,
-            'eeg': 3,
-            'acc': 4,
-            'lux': 5
+            'emg': [0],
+            'ecg': [1],
+            'eda': [2],
+            'eeg': [3],
+            'acc': [4],
+            'lux': [5]
         }
         self.digital_triggers = [1, 1]
 
@@ -61,8 +61,19 @@ class Bitalino(Device):
         #order channels for bitalino 
         for c in self.channel_map.keys():
             if c in channels:
-                self.channels.append(c)
-                chans.append(self.channel_map[c])
+                for index in self.channel_map[c]:
+                    chans.append(index)
+        chans.sort()
+        for c in chans:
+            found = False
+            for k in self.channel_map:
+                if c in self.channel_map[k]:
+                    self.channels.append(k)
+                    found = True
+                    break
+            if not found:
+                self.channels.append('unknown')
+        self.n_chans = len(chans)
         # Start Acquisition
         self.device.start(fs, chans)
         self.started = True
@@ -72,9 +83,12 @@ class Bitalino(Device):
         in_samples = self.device.read(round(self.fs / 10))
         samples = {}
         for i, c in enumerate(self.channels):
-            samples[c] = in_samples[:, -len(self.channels) + i].tolist()
-            if c == 'eeg': #eeg supports multiple electrodes
-                samples[c] = [ [ s ] for s in samples[c] ]
+            if not c in samples:
+                samples[c] = []
+            samples[c].append(in_samples[:, -self.n_chans + i].tolist())
+            
+            if c == 'eeg': #eeg supports multiple electrodes ... FIX THIS
+                samples[c] = [ [ [ s ] for s in samples[c] ] ]
         return samples
 
     #stop streaming

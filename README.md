@@ -18,7 +18,7 @@
     command line arguments:
     -d, --device [device_type (default: bitalino)]
         choose biosignal acquisition device
-        [device_type] - bitalino, (openbci soon i promise...)
+        [device_type] - bitalino, openbci (cython)
     -f, --freq [sampling_frequency (default: 100)]
         set sampling frequency for biosignal data acquisition
     -l, --list
@@ -35,5 +35,3 @@
         [prefix (default: /rtbio)]
     --filename [filename]
         [filename (default: temp.txt)]
-        
- - LICENSE : GNU General Public License v3.0
