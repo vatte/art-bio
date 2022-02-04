@@ -46,13 +46,21 @@ def getSamplingFrequency(args):
 
 def getFilename(args):
     if '--filename' in args:
-        index = next(i for i, arg in enumerate(args) if arg == '--filename' or arg == '-f')
+        index = next(i for i, arg in enumerate(args) if arg == '--filename')
         try:
             return args[index+1]
         except IndexError:
             raise ValueError('filename is empty')
     return None
 
+def getPort(args):
+    if '--port' in args:
+        index = next(i for i, arg in enumerate(args) if arg == '--port')
+        try:
+            return args[index+1]
+        except IndexError:
+            raise ValueError('port is empty')
+    return None
 
 
 source_types = ['ecg', 'eda', 'eeg', 'emg']

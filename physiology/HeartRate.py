@@ -10,27 +10,35 @@ from .DataCollector import DataCollector
 class HeartRate(DataCollector):
     
     def __init__(self, _Fs, _filter_r):
-        DataCollector.__init__(self, _Fs)
         self.filter_r = _filter_r
+        self.Fs = _Fs
+        self.initialize()
+
+    
+    def initialize(self):
+        DataCollector.__init__(self, self.Fs)
+
+        #todo: stores unnecessarily all the previous data
+
         self.clead = []
         self.filtered_clead = []
-        self.emg_filter_r = int(0.5*_Fs/34)
-        self.clead_filter_r = int(0.5*_Fs/24)
+        self.emg_filter_r = int(0.5*self.Fs/34)
+        self.clead_filter_r = int(0.5*self.Fs/24)
         
         self.initialized = False
         self.init_time = 5
         
         self.beats = []
         self.last = 0
-        self.detect_interval = int(0.2*_Fs)
+        self.detect_interval = int(0.2*self.Fs)
         
         self.r = 0
         self.rr = 0
         self.RR = [0, 0, 0, 0, 0]
         self.r_i = -1
         
-        self.f_interval = int(_Fs*0.35)
-        self.f_interval2 = int(_Fs*0.05)
+        self.f_interval = int(self.Fs*0.35)
+        self.f_interval2 = int(self.Fs*0.05)
     
     def add_data(self, new_data):
         self.data.extend(new_data)
@@ -57,6 +65,16 @@ class HeartRate(DataCollector):
             ibis = self.detect_beats(0)
         elif self.initialized:
             ibis = self.detect_beats(last_clead_i)
+        
+        #if len(ibis) > 0:
+        #    print(ibis)
+        
+        #reinitialize if no beats are detected for duration of self.init_time
+        if len(self.filtered_clead) - self.last > self.init_time * self.Fs:
+            print('re-initializing...')
+            self.initialize()
+            print(len(self.filtered_clead), self.last)
+
         return {'ibi': ibis}
         
         

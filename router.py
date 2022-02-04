@@ -15,6 +15,7 @@ class Router():
         self.osc_prefix = None
         self.osc_address = None
         self.filename = None
+        self.ws_port = None
         def digital_out():
             pass
         self.digital_out_func = digital_out
@@ -33,7 +34,7 @@ class Router():
             self.file_handle = open(self.filename, 'w')
             print("initializing file " + self.filename)
         if 'ws' in destinations:
-            self.ws_server = WSServer()
+            self.ws_server = WSServer(self.ws_port)
 
 
     def route_data(self, source, connections, features, raw_data):
@@ -65,20 +66,21 @@ class Router():
         if features:
             for destination in source_connections:
                 for i, features_chan in enumerate(features):
-                    for feature in features_chan.keys():
-                        osc_dest = '/{}/{}'.format(source, feature)
-                        if i > 0:
-                            osc_dest += str(i)
-                        for data in features_chan[feature]:
-                            if destination == 'osc':
-                                self.osc_client.send_message(self.osc_prefix + osc_dest, data)
-                            elif destination == 'file':
-                                self.file_handle.write('{} {}: {}\n'.format(current_time, osc_dest, str(data)))
-                            elif destination == 'ws':
-                                self.ws_server.add_message('{}|{}/{}'.format(current_time, osc_dest, str(raw_data)))
-                            elif destination == 'digital':
-                                if self.digital_out_func:
-                                    self.digital_out_func()
-                                
+                    if features_chan:
+                        for feature in features_chan.keys():
+                            osc_dest = '/{}/{}'.format(source, feature)
+                            if i > 0:
+                                osc_dest += str(i)
+                            for data in features_chan[feature]:
+                                if destination == 'osc':
+                                    self.osc_client.send_message(self.osc_prefix + osc_dest, data)
+                                elif destination == 'file':
+                                    self.file_handle.write('{} {}: {}\n'.format(current_time, osc_dest, str(data)))
+                                elif destination == 'ws':
+                                    self.ws_server.add_message('{}|{}/{}'.format(current_time, osc_dest, str(data)))
+                                elif destination == 'digital':
+                                    if self.digital_out_func:
+                                        self.digital_out_func()
+                                    
 
 
