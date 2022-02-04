@@ -40,3 +40,4 @@
 To run from Python:
 - You can use the `art-bio.yaml` file to intitialize the Anaconda environment with the necessary packages
 - Run from terminal with for example the command `python art-bio.py -d biosignalsplux -c recg ws` to try the banana demo
+- The biosignalsplux library files for Win64/Python 3.8 are included by default, for other platforms copy the files from the corresponding folder at [https://github.com/biosignalsplux/python-samples/tree/master/PLUX-API-Python3](https://github.com/biosignalsplux/python-samples/tree/master/PLUX-API-Python3) to the `devices/pluxlib` folder.
