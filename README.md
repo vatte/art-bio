@@ -35,3 +35,8 @@
         [prefix (default: /rtbio)]
     --filename [filename]
         [filename (default: temp.txt)]
+
+
+To run from Python:
+- You can use the `art-bio.yaml` file to intitialize the Anaconda environment with the necessary packages
+- Run from terminal with for example the command `python art-bio.py -d biosignalsplux -c recg ws` to try the banana demo
