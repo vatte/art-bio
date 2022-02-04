@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Raw data visualizer</title>
+        <style>
+        body {
+            background-color: black;
+            color: yellow;
+            font-family: sans-serif;
+        }
+        #eda_sync {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: purple;
+            left: 1380px;
+        }
+        </style>
+    </head>
+    <body>
+        <center><h1>Grab the banana! Firmly, but gently...</h1></center>
+
+        <img id="banana" width="150" style="position:absolute;" src="banana.png">
+
+
+        <canvas id="eda" width="840" height="150" style="position:absolute; left:540px; top:800px;"></canvas>
+        <canvas id="ecg1" width="840" height="150" style="position:absolute; left:540px; top:600px;"></canvas>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/smoothie/1.34.0/smoothie.min.js"></script>
+
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/16.3.5/Tween.min.js"></script>
+        <script>
+            
+            function pearson(x, y) {
+                var shortestArrayLength = 0;
+                 
+                if(x.length == y.length) {
+                    shortestArrayLength = x.length;
+                } else if(x.length > y.length) {
+                    shortestArrayLength = y.length;
+                    console.error('x has more items in it, the last ' + (x.length - shortestArrayLength) + ' item(s) will be ignored');
+                } else {
+                    shortestArrayLength = x.length;
+                    console.error('y has more items in it, the last ' + (y.length - shortestArrayLength) + ' item(s) will be ignored');
+                }
+              
+                var xy = [];
+                var x2 = [];
+                var y2 = [];
+              
+                for(var i=0; i<shortestArrayLength; i++) {
+                    xy.push(x[i] * y[i]);
+                    x2.push(x[i] * x[i]);
+                    y2.push(y[i] * y[i]);
+                }
+              
+                var sum_x = 0;
+                var sum_y = 0;
+                var sum_xy = 0;
+                var sum_x2 = 0;
+                var sum_y2 = 0;
+              
+                for(var i=0; i< shortestArrayLength; i++) {
+                    sum_x += x[i];
+                    sum_y += y[i];
+                    sum_xy += xy[i];
+                    sum_x2 += x2[i];
+                    sum_y2 += y2[i];
+                }
+              
+                var step1 = (shortestArrayLength * sum_xy) - (sum_x * sum_y);
+                var step2 = (shortestArrayLength * sum_x2) - (sum_x * sum_x);
+                var step3 = (shortestArrayLength * sum_y2) - (sum_y * sum_y);
+                var step4 = Math.sqrt(step2 * step3);
+                var answer = step1 / step4;
+              
+                return answer;
+            }
+
+            function startSmoothie(canvas_id) {
+                var ts = new TimeSeries();
+                var ch = new SmoothieChart({interpolation: 'linear', scaleSmoothing: 1.0});
+                ch.addTimeSeries(ts);
+                //you need a ch# canvas element for each channel
+                ch.streamTo(document.getElementById(canvas_id));
+
+                return ts;
+            }
+
+            var ecg1_ts = startSmoothie('ecg1');
+            var eda_ts = startSmoothie('eda');
+
+            var bananas_moving = [false, false];
+            var ibis = [1, 1];
+            
+            function runBanana(port, img_id, x_offset) {
+                var audio = new Audio("super" + img_id + '.wav');
+                audio.loop=false;
+
+                var ibi = 1;
+                var banana_moving = false;
+                var last_beat = Date.now();
+                var eda_value = -1;
+                var eda_baseline = -1;
+
+
+                function startWebsocketConnection() {
+                    var ws = new WebSocket("ws://127.0.0.1:" + port);
+                    ws.onclose = function() {
+                        setTimeout(function() {
+                            location.reload();
+                        }, 5000);
+                    }
+
+                    ws.onmessage = function (event) {
+                        var time_data = event.data.split('|');
+                        var time = time_data[0] * 1000;
+                        var data = time_data[1].split('/');
+                        //console.log(time_data[1]);
+                        if(data[1] == 'ecg' && data[2] == 'ibi') {
+                            //console.log(data[3]);
+                            if(data[3] < 2 && data[3] > 0.4) {
+                                banana_moving = true;
+                                ibi = 0.9 * ibi + 0.1 * data[3];
+                                last_beat = Date.now();
+                            }
+                            else {
+                                banana_moving = false;
+                            }
+                            if (img_id == 'banana') {
+                                bananas_moving[0] = banana_moving;
+                                ibis[0] = ibi;
+                            }
+                            else {
+                                bananas_moving[1] = banana_moving;
+                                ibis[1] = ibi;
+                            }
+                        }
+                        if(data[1] == 'ecg' && data[2] == 'raw') {
+                            var ts = img_id == 'banana' ? ecg1_ts : ecg2_ts;
+                            var samples = data[3].replace('[', '').replace(']', '').replace('[', '').replace(']', '').split(', ');
+                            //console.log(samples);
+                            for(var i=0; i<samples.length; i++) {
+                                var sample = samples[i].replace('[', '').replace(']', '');
+                                ts.append(time, sample);
+                                time += 1000/100;
+                            
+                            }
+                        }
+                        if(data[1] == 'eda' && data[2] == 'raw') {
+                            var ts = eda_ts;
+                            var samples = data[3].replace('[', '').replace(']', '').replace('[', '').replace(']', '').split(', ');
+                            var mean_sample = 0;
+                            for(var i=0; i<samples.length; i++) {
+                                var sample = samples[i].replace('[', '').replace(']', '');
+                                mean_sample += parseFloat(sample);
+                            }
+                            mean_sample /= samples.length;
+
+
+                            if(eda_value == -1) eda_value = mean_sample;
+                            else eda_value = 0.8 * eda_value + 0.2 * mean_sample;
+                            if(eda_baseline == -1) eda_baseline = mean_sample;
+                            else eda_baseline = 0.999 * eda_baseline + 0.001 * mean_sample;
+                            ts.append(time, eda_value - eda_baseline);
+                        }
+                    }
+                }
+                startWebsocketConnection();
+
+
+
+
+                var position = {x: 200, y: 400, rotation: 0};
+                var target;
+                var tween, tweenBack;
+                
+                init();
+                animate();
+
+                function init() {
+                    if (Date.now() - last_beat > 5000) {
+                        banana_moving = false;
+                    }
+
+                    var new_x = banana_moving ? Math.random() * 400 + x_offset : position.x;
+                    var new_y = banana_moving ? Math.random() * 200 : position.z;
+                    var new_rotation = banana_moving ? (Math.random() - 0.5) * 1080 : position.rotation;
+                    
+
+                    if(bananas_moving[0] && bananas_moving[1]) {
+                        var diff = ibis[0] - ibis[1];
+
+                        var off_center = Math.abs(diff) * 800;
+                        new_x = img_id == 'banana' ? x_offset + 400 - off_center: x_offset + off_center;
+
+                        new_rotation = img_id == 'banana' ? position.rotation + diff * 720 : position.rotation - diff * 720;
+                    }
+
+                    if(banana_moving) {
+                        audio.play();
+                        console.log('PLAYING AUDIO ' + img_id);
+                    }
+
+                    target = document.getElementById(img_id);
+                    tween = new TWEEN.Tween(position)
+                        .to({x: new_x + 0.5 * (position.x - new_x), y: new_y, rotation: new_rotation + 0.5 * (position.rotation - new_rotation)}, 1000 * ibi/2)
+                        .easing(TWEEN.Easing.Sinusoidal.Out)
+                        .onUpdate(update);
+                    tweenBack = new TWEEN.Tween(position)
+                        .to({x: new_x, y: 400, rotation: new_rotation}, 1000 * ibi/2)
+                        .easing(TWEEN.Easing.Sinusoidal.In)
+                        .onUpdate(update)
+                        .onComplete(init);
+                    tween.chain(tweenBack);
+                    tween.start();
+                }
+                //If we register the callback animate, but the TWEEN.update(time) returns false, 
+                //cancel/unregister the handler
+                function animate( time ) {
+                    var id = requestAnimationFrame(animate);
+                    
+                    var result = TWEEN.update(time);
+                    if(!result) cancelAnimationFrame(id);
+                }
+                function update() {
+                    target.style.left = position.x + 'px';
+                    target.style.top = position.y + 'px';
+                    target.style.webkitTransform = 'rotate(' + Math.floor(position.rotation) + 'deg)';
+                    target.style.MozTransform = 'rotate(' + Math.floor(position.rotation) + 'deg)';
+                }
+            }
+            runBanana(5678, 'banana', 520);
+			
+        </script>
+    </body>
+</html>
