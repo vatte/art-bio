@@ -180,6 +180,7 @@ try:
     while True:
         # Read samples
         samples = device.read()
+        print(samples)
         for source in samples.keys():
             features = []
             for i, channel in enumerate(samples[source]):
@@ -190,7 +191,8 @@ try:
                     features.append(sources[source][i].add_data(channel))
             router.route_data(source, connections, features, samples[source])
 
-except KeyboardInterrupt:
+except (Exception, KeyboardInterrupt) as e:
     device.close()
     if router.ws_server:
         router.ws_server.stop()
+    raise(e)

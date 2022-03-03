@@ -48,29 +48,30 @@ class Router():
         if 'r' + source in connections:
             source_connections += connections['r' + source]
             for destination in connections['r' + source]: 
-                osc_dest = '/{}/raw'.format(source)
-                if destination == 'osc':
-                    for i, channel in enumerate(raw_data):
+                for i, channel in enumerate(raw_data):
+                    if i > 0:
+                        source += str(i)
+
+                    osc_dest = '/{}/raw'.format(source)
+                    if destination == 'osc':
                         for data in channel:
                             osc_address = self.osc_prefix + osc_dest
-                            if i > 0:
-                                osc_address += str(i)
                             self.osc_client.send_message(osc_address, data)
-                elif destination == 'file':
-                    self.file_handle.write('{} {}: {}\n'.format(current_time, osc_dest, str(raw_data)))
-                elif destination == 'ws':
-                    self.ws_server.add_message('{}|{}/{}'.format(current_time, osc_dest, str(raw_data)))
+                    elif destination == 'file':
+                        self.file_handle.write('{} {}: {}\n'.format(current_time, osc_dest, str(raw_data)))
+                    elif destination == 'ws':
+                        self.ws_server.add_message('{}|{}/{}'.format(current_time, osc_dest, str(raw_data)))
 
 
         # features
         if features:
             for destination in source_connections:
                 for i, features_chan in enumerate(features):
+                    if i > 0:
+                        source += str(i)
                     if features_chan:
                         for feature in features_chan.keys():
                             osc_dest = '/{}/{}'.format(source, feature)
-                            if i > 0:
-                                osc_dest += str(i)
                             for data in features_chan[feature]:
                                 if destination == 'osc':
                                     self.osc_client.send_message(self.osc_prefix + osc_dest, data)

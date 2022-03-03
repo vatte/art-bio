@@ -47,7 +47,9 @@ class WSServer():
         thread.start()
 
     def stop(self):
-        self.loop.close()
+        self.loop.call_soon_threadsafe(self.loop.stop)
+        self.loop.call_soon_threadsafe(self.loop.close)
+        #self.loop.close()
 
 
 if __name__ == "__main__":

@@ -25,7 +25,16 @@ class Biosignalsplux(Device):
         }
 
         # find device
-        self.device_list = self.list_devices()
+        print('Looking for biosignalsplux device')
+        retries = 0
+        self.device_list = []
+
+        while retries < 3 and len(self.device_list) == 0:
+            self.device_list = self.list_devices()
+        
+        if len(self.device_list) == 0:
+            raise Exception('No biosignalsplux device found')
+
         try:
             device_address = self.device_list[dev_i]
         except IndexError:
@@ -104,8 +113,8 @@ class Biosignalsplux(Device):
             if not c in samples:
                 samples[c] = []
             samples[c].append([s[i] for s in self.device.in_samples])
-        if 'eeg' in samples:
-            samples['eeg'] = [ [ [samples['eeg'][i][j] for i in range(len(samples['eeg'])) ] for j in range(len(samples['eeg'][0]))] ]
+        #if 'eeg' in samples:
+        #    samples['eeg'] = [ [ [samples['eeg'][i][j] for i in range(len(samples['eeg'])) ] for j in range(len(samples['eeg'][0]))] ]
         #print(samples)
         self.device.in_samples = [] # clear the sample buffer
         return samples
