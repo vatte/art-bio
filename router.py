@@ -49,10 +49,11 @@ class Router():
             source_connections += connections['r' + source]
             for destination in connections['r' + source]: 
                 for i, channel in enumerate(raw_data):
+                    src = source
                     if i > 0:
-                        source += str(i)
+                        src += str(i)
 
-                    osc_dest = '/{}/raw'.format(source)
+                    osc_dest = '/{}/raw'.format(src)
                     if destination == 'osc':
                         for data in channel:
                             osc_address = self.osc_prefix + osc_dest
@@ -67,11 +68,12 @@ class Router():
         if features:
             for destination in source_connections:
                 for i, features_chan in enumerate(features):
+                    src = source
                     if i > 0:
-                        source += str(i)
+                        src += str(i)
                     if features_chan:
                         for feature in features_chan.keys():
-                            osc_dest = '/{}/{}'.format(source, feature)
+                            osc_dest = '/{}/{}'.format(src, feature)
                             for data in features_chan[feature]:
                                 if destination == 'osc':
                                     self.osc_client.send_message(self.osc_prefix + osc_dest, data)

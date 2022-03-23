@@ -180,7 +180,7 @@ try:
     while True:
         # Read samples
         samples = device.read()
-        print(samples)
+        #print(samples)
         for source in samples.keys():
             features = []
             for i, channel in enumerate(samples[source]):
