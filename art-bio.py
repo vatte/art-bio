@@ -1,3 +1,4 @@
+# coding=UTF-8
 readme = '''
  🐍 rt-bio : A Real-Time BIOsignal feature extraction tool 🦆 
     https://github.com/vatte/rt-bio
@@ -42,6 +43,7 @@ import configparser
 
 import argparser as parser
 from devices import *
+from devices.Biosignalsplux import Biosignalsplux
 from init_sources import init_sources
 from router import Router
 
@@ -58,6 +60,7 @@ device_index = 0
 router.osc_address = '127.0.0.1:4810'
 router.osc_prefix = '/rtbio'
 router.filename = 'temp.txt'
+router.ws_port = 5678
 
 args = sys.argv
 
@@ -82,6 +85,10 @@ if '-l' in args or '--list' in args:
         device_list = OpenBCI.list_devices(None)
         for i, dev in enumerate(device_list):
             print('[{}] {}'.format(i, dev))
+    elif(device_name == 'biosignalsplux'):
+        device_list = Biosignalsplux.list_devices(None)
+        for i, dev in enumerate(device_list):
+            print('[{}] {}'.format(i, dev))
     else:
         raise ValueError('No such device: ' + device_name)
     print('exiting...')
@@ -101,6 +108,11 @@ if osc_prefix_arg:
 filename_arg = parser.getFilename(args)
 if filename_arg:
     router.filename = filename_arg
+
+#get ws port from args
+port_arg = parser.getPort(args)
+if port_arg:
+    router.ws_port = port_arg
 
 
 #get sampling_frequency from args
@@ -134,6 +146,14 @@ elif device_name == 'openbci':
     def noDigital():
         raise ValueError('openbci has no digital output defined')
     router.digital_out_func = noDigital
+elif device_name == 'biosignalsplux':
+    device = Biosignalsplux(device_index)
+    if 'biosignalsplux' in config:
+        channels = {}
+        for k in config['biosignalsplux']:
+            channels[k] = [ int(c) for c in config['biosignalsplux'][k].split(',') ]
+        device.channel_map = channels
+
 else:
     raise ValueError('No such device: ' + device_name)
 
@@ -145,15 +165,34 @@ router.init_destinations(connections)
 #start streaming
 device.start(sampling_frequency, sources.keys())
 
+## filter experiment here for powerline
+# from scipy import signal
+
+# b,a = signal.iirnotch(50, 25, 100)
+
+# print("B: " + str(b) + "A: " + str(a))
+
+# z = [0, 0, 0, 0, 0, 0, 0, 0]
+# for i, zz in enumerate(z):
+#     z[i] = signal.lfilter_zi(b, a)
+
 try:
     while True:
         # Read samples
         samples = device.read()
+        #print(samples)
         for source in samples.keys():
             features = []
             for i, channel in enumerate(samples[source]):
-                features.append(sources[source][i].add_data(channel))
+                #for j, s in enumerate(channel):
+                    #y, z[i] = signal.lfilter(b,a,[s], zi = z[i])
+                    #channel[j] = y[0]
+                if source != 'unknown' and source in sources:
+                    features.append(sources[source][i].add_data(channel))
             router.route_data(source, connections, features, samples[source])
 
-except KeyboardInterrupt:
+except (Exception, KeyboardInterrupt) as e:
     device.close()
+    if router.ws_server:
+        router.ws_server.stop()
+    raise(e)
