@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Raw data visualizer</title>
+        <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: sans-serif;
+        }
+        #eda_sync {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: purple;
+            left: 1380px;
+        }
+
+        #circle {
+          width: 400px;
+          height: 400px;
+          border-radius: 400px;
+          background: #FFBF00;
+        }
+
+
+        #arrow {
+          border: solid white;
+          border-width: 0 20px 20px 0;
+          display: inline-block;
+          padding: 20px;
+          transform: rotate(135deg);
+          -webkit-transform: rotate(135deg);
+        }
+
+        #circle2 {
+          width: 40px;
+          height: 40px;
+          border-radius: 40px;
+          border:5px solid white;
+          background: #FF009F;
+        }
+
+        .meter00 {
+          width: 370px;
+          height: 370px;
+          border-radius: 10px;
+          background: #5CBCFF;
+        }
+
+        #timer {
+          margin: 2px;
+          width:1410px;
+          height: 30px;
+          position: relative;
+          font-size: 40px;
+          text-align: right;
+          animation: mymove 1s infinite;
+        }
+
+        @keyframes mymove {
+          from {top: 1px;}
+          to {top: 2px;}
+        }
+
+
+
+        </style>
+    </head>
+    <body>
+
+
+        <div id="timer">La sesión ha iniciado.</div>
+        <img id="banana" width="300" style="position:absolute;" src="heart.png">
+        <div id="circle" style="position:absolute; left:500px; top:200px;"></div>
+        <img width="400" style="position:absolute; left:500px; top:200px;" src="lungs1.png">
+        <h4 style="position:absolute; left:20px; top:700px;">Ritmo cardíaco</h4>
+        <canvas id="ecg1" width="500" height="150" style="position:absolute; left:20px; top:750px;"></canvas>
+        <h4 style="position:absolute; left:560px; top:700px;">Respiración</h4>
+        <canvas id="eda" width="500" height="150" style="position:absolute; left:560px; top:750px;"></canvas>
+
+        <h4 style="position:absolute; left:1100px; top:700px;">Alpha</h4>
+        <canvas id="eeg" width="500" height="150" style="position:absolute; left:1100px; top:750px;"></canvas>
+        <canvas id="eeg1" width="500" height="150" style="position:absolute; left:1100px; top:950px;"></canvas>
+        <div class="meter00" style="position:absolute; left:1050px; top:210px;"></div>
+        <div id="circle2" style="position:absolute; left:1205px; top:365px;"></div>
+
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/smoothie/1.34.0/smoothie.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/16.3.5/Tween.min.js"></script>
+
+        <script>
+
+            // Elapsed time: in seconds
+            var xtime = document.getElementById("timer");
+            xtime.addEventListener("animationiteration", myRepeatFunction);
+            function myRepeatFunction(event) {
+              this.innerHTML = event.elapsedTime + " seg.";
+            }
+
+            function startSmoothie(canvas_id) {
+                var ts = new TimeSeries();
+                var ch = new SmoothieChart({interpolation: 'linear', scaleSmoothing: 1.0});
+                ch.addTimeSeries(ts);
+                //you need a ch# canvas element for each channel
+                ch.streamTo(document.getElementById(canvas_id));
+
+                return ts;
+            }
+
+
+            function startSmoothie1() {
+                var ts = new TimeSeries();
+                var ch = new SmoothieChart({interpolation: 'linear', scaleSmoothing: 1.0});
+                ch.addTimeSeries(ts);
+
+                return ts;
+            }
+
+            var ecg1_ts = startSmoothie('ecg1');
+            var eda_ts = startSmoothie('eda');
+            var eeg_ts = startSmoothie('eeg');
+            var eeg1_ts = startSmoothie('eeg1');
+
+            // smoothie without graphical ts
+            var valen_ts = startSmoothie1();
+
+            var bananas_moving = [false, false];
+            var ibis = [1, 1];
+
+            //lungs
+            var edas_vals = [1, 1, 1, 1, 1];
+            var edas_vals_norm = [1, 1, 1, 400, 0];
+            var edas_vals_pos = [700,400];
+
+            //arousal             // range arrow (200, 556)
+            //var alpha_vals = [value,max,min]
+            var alpha_vals = [200, 800, 400];
+            var alpha_vals1 = [200, 800, 400];
+            var alpha_valsVal = [200, 800, 400];
+            // alpha_pos_norm = [valence,arousal]
+            var alpha_pos_norm = [1205,365];
+
+
+            // normalizing values, range (0,1)
+            function norm_vals(val,max,min){
+              return(val-min)/(max-min);
+            }
+
+            function runBanana(port, img_id, x_offset, img_id_2, img_id_3) {
+                var audio = new Audio("super" + img_id + '.wav');
+                audio.loop=false;
+
+                var ibi = 1;
+                var banana_moving = false;
+                var last_beat = Date.now();
+                var eda_value = -1;
+                var eda_baseline = -1;
+                // alpha channel 1
+                var alpha_value = -1;
+                var alpha_baseline = -1;
+                // alpha channel 2
+                var alpha_value1 = -1;
+                var alpha_baseline1 = -1;
+
+                // alpha valence
+                var alpha_valueVal = -1;
+                var alpha_baselineVal = -1;
+
+
+                function startWebsocketConnection() {
+                    var ws = new WebSocket("ws://127.0.0.1:" + port);
+                    ws.onclose = function() {
+                        setTimeout(function() {
+                            location.reload();
+                        }, 5000);
+                    }
+
+                    ws.onmessage = function (event) {
+                        var time_data = event.data.split('|');
+                        var time = time_data[0] * 1000;
+                        var data = time_data[1].split('/');
+                        if(data[1] == 'ecg' && data[2] == 'ibi') {
+                            //console.log(data[3]);
+                            if(data[3] < 2 && data[3] > 0.4) {
+                                banana_moving = true;
+                                ibi = 0.9 * ibi + 0.1 * data[3];
+                                last_beat = Date.now();
+                            }
+                            else {
+                                banana_moving = false;
+                            }
+                            if (img_id == 'banana') {
+                                bananas_moving[0] = banana_moving;
+                                ibis[0] = ibi;
+                            }
+                            else {
+                                bananas_moving[1] = banana_moving;
+                                ibis[1] = ibi;
+                            }
+                        }
+                        if(data[1] == 'ecg' && data[2] == 'raw') {
+                            var ts = img_id == 'banana' ? ecg1_ts : ecg2_ts;
+                            var samples = data[3].replace('[', '').replace(']', '').replace('[', '').replace(']', '').split(', ');
+                            //console.log(samples);
+                            for(var i=0; i<samples.length; i++) {
+                                var sample = samples[i].replace('[', '').replace(']', '');
+                                ts.append(time, sample);
+                                time += 1000/100;
+
+                            }
+
+                        // LUNGS
+                        }
+                        if(data[1] == 'eda' && data[2] == 'raw') {
+                            var ts = eda_ts;
+                            var samples = data[3].replace('[', '').replace(']', '').replace('[', '').replace(']', '').split(', ');
+                            var mean_sample = 0;
+                            for(var i=0; i<samples.length; i++) {
+                                var sample = samples[i].replace('[', '').replace(']', '');
+                                mean_sample += parseFloat(sample);
+                            }
+                            mean_sample /= samples.length;
+
+
+                            if(eda_value == -1) eda_value = mean_sample;
+                            else eda_value = 0.8 * eda_value + 0.2 * mean_sample;
+                            if(eda_baseline == -1) eda_baseline = mean_sample;
+                            else eda_baseline = 0.999 * eda_baseline + 0.001 * mean_sample;
+                            ts.append(time, eda_value - eda_baseline);
+
+
+                            // lungs
+                            // edas_vals = [current val, previous val, difference, max val, min val]
+                            let soft_prov = edas_vals[1];
+                            edas_vals[1] = edas_vals[0];
+                            edas_vals[0] = eda_value - eda_baseline;
+                            edas_vals[2] = edas_vals[1] - edas_vals[0];
+                            edas_vals[3] = ts.maxValue;
+                            edas_vals[4] = ts.minValue;
+
+
+                            // normalize values, to range (0,400)
+                            edas_vals_norm[0] = norm_vals(edas_vals[0], edas_vals[3], edas_vals[4])*400;
+                            edas_vals_norm[1] = norm_vals(edas_vals[1], edas_vals[3], edas_vals[4])*400;
+                            edas_vals_norm[2] = edas_vals_norm[1]-edas_vals_norm[0];
+
+                            // update position of left-up corner of circle
+                            // if edas_vals_norm == 400,
+                            // edas_vals_pos = [x,y]
+                            edas_vals_pos[0] = (1-norm_vals(edas_vals[0], ts.maxValue, ts.minValue))*200 + 500;
+                            edas_vals_pos[1] = (1-norm_vals(edas_vals[0], ts.maxValue, ts.minValue))*200 + 200;
+
+                            var target_lungs = document.getElementById(img_id_2);
+                            target_lungs.style.height= edas_vals_norm[0]+ 'px';
+                            target_lungs.style.width= edas_vals_norm[0]+ 'px';
+                            target_lungs.style.left= edas_vals_pos[0]+ 'px';
+                            target_lungs.style.top= edas_vals_pos[1]+ 'px';
+
+                        }
+
+                        if(data[1] == 'eda' && data[2] == 'edr') {
+                            var samples = data[3].replace('[', '').replace(']', '').replace('[', '').replace(']', '').split(', ');
+                            //console.log('EDR', samples);
+                        }
+
+
+                        // AROUSAL- first source of alpha eeg
+                        if(data[1] == 'eeg' && data[2] == 'alpha') {
+                            var ts = eeg_ts;
+                            var eeg_mean_sample = 0;
+                            var eeg_samples = data[3].replace('[', '').replace(']', '').replace('[', '').replace(']', '').split(', ');
+                            for(var i=0; i<eeg_samples.length; i++) {
+                                var eeg_sample = eeg_samples[i].replace('[', '').replace(']', '');
+                                eeg_mean_sample += parseFloat(eeg_sample);
+                            }
+                            eeg_mean_sample /= eeg_samples.length;
+
+                            //READINGS COME FROM VALUE - BASELINE (AS IN EDA EXAMPLE)
+
+                            if(alpha_value == -1) alpha_value = eeg_mean_sample;
+                            else alpha_value = 0.8 * alpha_value + 0.2 * eeg_mean_sample;
+                            if(alpha_baseline == -1) alpha_baseline = eeg_mean_sample;
+                            else alpha_baseline = 0.999 * alpha_baseline + 0.001 * eeg_mean_sample;
+                            ts.append(time, alpha_value - alpha_baseline);
+
+                            alpha_vals[0] = alpha_value - alpha_baseline ;
+                            alpha_vals[1] = ts.maxValue ;
+                            alpha_vals[2] = ts.minValue ;
+                        }
+
+
+                        // SECOND source of alpha eeg
+                        if(data[1] == 'eeg1' && data[2] == 'alpha') {
+                            var ts1 = eeg1_ts;
+                            var eeg_samples1 = data[3].replace('[', '').replace(']', '').replace('[', '').replace(']', '').split(', ');
+                            var eeg_mean_sample1 = 0;
+                            for(var i=0; i<eeg_samples1.length; i++) {
+                                var eeg_sample1 = eeg_samples1[i].replace('[', '').replace(']', '');
+                                eeg_mean_sample1 += parseFloat(eeg_sample1);
+                            }
+                            eeg_mean_sample1 /= eeg_samples1.length;
+
+
+                            if(alpha_value1 == -1) alpha_value1 = eeg_mean_sample1;
+                            else alpha_value1 = 0.8 * alpha_value1 + 0.2 * eeg_mean_sample1;
+                            if(alpha_baseline1 == -1) alpha_baseline1 = eeg_mean_sample1;
+                            else alpha_baseline1 = 0.999 * alpha_baseline1 + 0.001 * eeg_mean_sample1;
+                            ts1.append(time, alpha_value1 - alpha_baseline1);
+
+                            alpha_vals1[0] = alpha_value1 - alpha_baseline1;
+                            alpha_vals1[1] = ts1.maxValue;
+                            alpha_vals1[2] = ts1.minValue;
+
+                          }
+
+
+                          // // arousal
+                          alpha_pos_norm[1] = (norm_vals(alpha_vals[0], alpha_vals[1], alpha_vals[2]))*320+ 210;
+
+
+                          // // valence  (input 2 - input 1)
+                          valence = alpha_vals1[0] - alpha_vals[0]
+
+                          if(data[1] == 'eeg1' && data[2] == 'alpha') {
+                              var tsVal = valen_ts;
+                              if(alpha_valueVal == -1) alpha_valueVal = valence;
+                              else alpha_valueVal = 0.8 * alpha_valueVal + 0.2 * valence;
+                              if(alpha_baselineVal == -1) alpha_baselineVal = valence;
+                              else alpha_baselineVal = 0.999 * alpha_baselineVal + 0.001 * valence;
+                              tsVal.append(time, alpha_valueVal - alpha_baselineVal);
+
+                               alpha_valsVal[0] = alpha_valueVal - alpha_baselineVal;
+                               alpha_valsVal[1] = tsVal.maxValue ;
+                               alpha_valsVal[2] = tsVal.minValue ;
+                        }
+
+                        alpha_pos_norm[0] = (norm_vals(alpha_valsVal[0], alpha_valsVal[1], alpha_valsVal[2]))*320+ 1050;
+
+
+                    }
+                }
+                startWebsocketConnection();
+
+
+
+                var position = {x: 80, y: 400};
+                var target;
+                var tween, tweenBack;
+
+                //arousal
+                var a_position = {x: 1205, y: 365};
+                var a_target;
+                var a_tweenParams;
+
+                init();
+                animate();
+
+                function init() {
+                    if (Date.now() - last_beat > 5000) {
+                        banana_moving = false;
+                    }
+
+                    var new_x = 80;
+                    var new_y = banana_moving ? ibi + 100 : position.z;
+
+
+                    if(bananas_moving[0] && bananas_moving[1]) {
+                        var diff = ibis[0] - ibis[1];
+                        var off_center = Math.abs(diff) * 800;
+
+                        new_x = img_id == 'banana' ? x_offset + 400 - off_center: x_offset + off_center;
+                    }
+
+
+                    target = document.getElementById(img_id);
+                    tween = new TWEEN.Tween(position)
+                        .to({x: new_x + 0.5 * (position.x - new_x), y: new_y}, 1000 * ibi/2)
+                        .easing(TWEEN.Easing.Sinusoidal.Out)
+                        .onUpdate(update);
+                    tweenBack = new TWEEN.Tween(position)
+                        .to({x: new_x, y: 400}, 1000 * ibi/2)
+                        .easing(TWEEN.Easing.Sinusoidal.In)
+                        .onUpdate(update)
+                        .onComplete(init);
+                    tween.chain(tweenBack);
+                    tween.start();
+
+                    //arousal
+                    a_target = document.getElementById(img_id_3);
+
+                    a_tweenParams = new TWEEN.Tween(a_position)
+                        .to({x:alpha_pos_norm[0],y: alpha_pos_norm[1]}, 3000)
+                        .easing(TWEEN.Easing.Sinusoidal.In)
+                        .onUpdate(update)
+                    a_tweenParams.start();
+
+
+                }
+                //If we register the callback animate, but the TWEEN.update(time) returns false,
+                //cancel/unregister the handler
+                function animate( time ) {
+                    var id = requestAnimationFrame(animate);
+
+                    var result = TWEEN.update(time);
+                    if(!result) cancelAnimationFrame(id);
+                }
+                function update() {
+                    target.style.left = position.x + 'px';
+                    target.style.top = position.y + 'px';
+
+                    // arousal
+                    a_target.style.top = a_position.y + 'px';
+                    a_target.style.left = a_position.x + 'px';
+
+                }
+            }
+            runBanana(5678, 'banana', 520, 'circle', 'circle2');
+
+
+        </script>
+    </body>
+</html>

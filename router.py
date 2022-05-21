@@ -20,6 +20,9 @@ class Router():
             pass
         self.digital_out_func = digital_out
 
+        #self.current_time = time.time()
+        self.ini_time = 0
+
     def init_destinations(self, connections):
 
         destinations = []
@@ -32,22 +35,30 @@ class Router():
             self.osc_client = udp_client.SimpleUDPClient(address_port[0], int(address_port[1]))
         if 'file' in destinations:
             self.file_handle = open(self.filename, 'w')
-            print("initializing file " + self.filename)
+            print("initializing file" + self.filename)
+
+            self.ini_time = time.time()
+            self.file_handle.write('{}: {}\n'.format('initial time',self.ini_time))
+
+
         if 'ws' in destinations:
             self.ws_server = WSServer(self.ws_port)
 
 
     def route_data(self, source, connections, features, raw_data):
         source_connections = []
+
+        current_time = time.time()
+
         if source in connections:
             source_connections += connections[source]
 
-        current_time = time.time()
-        
+
+
         # raw data
         if 'r' + source in connections:
             source_connections += connections['r' + source]
-            for destination in connections['r' + source]: 
+            for destination in connections['r' + source]:
                 for i, channel in enumerate(raw_data):
                     src = source
                     if i > 0:
@@ -59,7 +70,7 @@ class Router():
                             osc_address = self.osc_prefix + osc_dest
                             self.osc_client.send_message(osc_address, data)
                     elif destination == 'file':
-                        self.file_handle.write('{} {}: {}\n'.format(current_time, osc_dest, str(raw_data)))
+                        self.file_handle.write('{} {}: {}\n'.format(current_time-self.ini_time, osc_dest, str(raw_data)))
                     elif destination == 'ws':
                         self.ws_server.add_message('{}|{}/{}'.format(current_time, osc_dest, str(raw_data)))
 
@@ -78,12 +89,9 @@ class Router():
                                 if destination == 'osc':
                                     self.osc_client.send_message(self.osc_prefix + osc_dest, data)
                                 elif destination == 'file':
-                                    self.file_handle.write('{} {}: {}\n'.format(current_time, osc_dest, str(data)))
+                                    self.file_handle.write('{} {}: {}\n'.format(current_time-self.ini_time, osc_dest, str(data)))
                                 elif destination == 'ws':
                                     self.ws_server.add_message('{}|{}/{}'.format(current_time, osc_dest, str(data)))
                                 elif destination == 'digital':
                                     if self.digital_out_func:
                                         self.digital_out_func()
-                                    
-
-
